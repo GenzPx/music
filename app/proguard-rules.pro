@@ -1,0 +1,3 @@
+-keep class com.genzpx.music.model.** { *; }
+-keepclassmembers class * extends android.app.Service { public *; }
+-dontwarn android.support.**

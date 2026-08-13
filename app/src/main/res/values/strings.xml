@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Music</string>
+
+    <string name="tab_songs">Lagu</string>
+    <string name="tab_albums">Album</string>
+    <string name="tab_artists">Artis</string>
+    <string name="tab_folders">Folder</string>
+
+    <string name="search_hint">Cari lagu, artis, album…</string>
+    <string name="type_to_search">Ketik untuk mencari</string>
+    <string name="no_result">Tidak ada hasil</string>
+    <string name="scanning">Memindai lagu…</string>
+    <string name="empty_songs">Belum ada lagu ditemukan.\nSalin file musik ke penyimpanan lalu tekan Pindai ulang.</string>
+    <string name="starting">Menyiapkan pemutar…</string>
+
+    <string name="perm_title">Izin diperlukan</string>
+    <string name="perm_body">Music butuh izin membaca file audio untuk menampilkan lagu di perangkat ini.\n\nHanya itu. Tidak ada izin internet sama sekali.</string>
+    <string name="grant">Beri izin</string>
+
+    <string name="play">Putar</string>
+    <string name="pause">Jeda</string>
+    <string name="next">Berikutnya</string>
+    <string name="prev">Sebelumnya</string>
+    <string name="channel_playback">Pemutaran</string>
+
+    <string name="menu">Menu</string>
+    <string name="search">Cari</string>
+    <string name="back">Kembali</string>
+
+    <string name="sleep_timer">Timer tidur</string>
+    <string name="sleep_off">Matikan timer</string>
+    <string name="sleep_set">Timer disetel %1$d menit</string>
+    <string name="sleep_cancelled">Timer dimatikan</string>
+    <string name="sleep_remaining">Timer tidur: %1$d menit lagi</string>
+
+    <string name="equalizer">Equalizer</string>
+    <string name="no_equalizer">Perangkat ini tidak punya equalizer sistem</string>
+
+    <string name="theme">Tema</string>
+    <string name="theme_system">Ikuti sistem</string>
+    <string name="theme_light">Terang</string>
+    <string name="theme_dark">Gelap</string>
+
+    <string name="rescan">Pindai ulang</string>
+    <string name="about">Tentang</string>
+    <string name="close">Tutup</string>
+
+    <string name="about_version_fmt">Versi %1$s (build %2$d)</string>
+    <string name="about_author">Dibuat oleh GenzPX</string>
+    <string name="about_license">Lisensi GPL-3.0</string>
+    <string name="about_repo">github.com/GenzPX/music</string>
+    <string name="about_noads_title">Kenapa tidak ada iklan?</string>
+    <string name="about_noads_body">Aplikasi ini sengaja dibuat tanpa izin INTERNET di AndroidManifest. Artinya sistem Android sendiri yang melarangnya membuka koneksi jaringan — bukan sekadar janji. Iklan tidak bisa dimuat, data tidak bisa dikirim keluar.\n\nSilakan periksa di Pengaturan &gt; Aplikasi &gt; Music &gt; Izin.</string>
+    <string name="about_libs">Dibangun dengan AndroidX (AppCompat, Media, RecyclerView, Palette) dan Material Components.</string>
+</resources>
