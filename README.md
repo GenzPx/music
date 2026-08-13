@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.png" alt="music" width="720">
+</p>
+
 # Music & Video
 
 Dua pemutar media offline untuk Android. Tanpa iklan, tanpa login, tanpa akun.
