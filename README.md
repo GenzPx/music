@@ -44,9 +44,40 @@ internet, build langsung digagalkan sebelum dirilis.
 | Timer tidur | 15 / 30 / 45 / 60 / 90 menit |
 | Equalizer | Memakai equalizer bawaan sistem |
 | Tema | Terang, gelap, atau ikut sistem |
+| Antrean terlihat | Ketuk "Lihat antrean" untuk melompat ke lagu mana pun |
+| Info berkas | Tahan sampul di layar pemutar untuk melihat lokasi berkas |
+| Maju cepat | Ketuk dua kali sampul untuk maju 10 detik |
+| Panduan latar belakang | Bantuan melonggarkan pembatasan bawaan ROM, sesuai merek |
 
 Otomatis jeda saat headset dicabut, dan saat ada telepon masuk atau aplikasi
 lain memutar suara.
+
+### Kalau musik sering berhenti sendiri
+
+Banyak ponsel — terutama Xiaomi, OPPO, realme, vivo, dan Infinix — menghentikan
+aplikasi latar belakang secara agresif demi menghemat baterai. Ini memengaruhi
+semua pemutar musik, bukan hanya aplikasi ini.
+
+Aplikasi mendeteksi sendiri kalau pemutarannya pernah dihentikan paksa. Setelah
+terjadi dua kali, muncul kartu saran berisi panduan yang sudah disesuaikan
+dengan merek ponsel, lengkap dengan tombol pintas ke halaman setelan terkait.
+
+Kartu itu bisa ditutup permanen, dan panduannya tetap bisa dibuka kapan saja
+lewat **Menu → Jaga musik tetap jalan**. Aplikasi tidak pernah mengubah setelan
+sistem sendiri.
+
+Langkah tercepat di hampir semua merek: buka **Aplikasi Terkini**, tahan kartu
+Music, lalu tekan ikon **gembok**.
+
+| Merek | Jalur setelan |
+|---|---|
+| Xiaomi / Redmi / POCO | Kelola aplikasi → Music → Hemat baterai → Tanpa batasan, lalu Mulai otomatis |
+| OPPO / realme | Baterai → Konsumsi daya latar belakang, dan Izin mulai otomatis |
+| vivo / iQOO | Baterai → Konsumsi daya tinggi latar belakang, dan Mulai otomatis |
+| Samsung | Baterai → Batas penggunaan latar belakang → Aplikasi tidak pernah tidur |
+| Huawei / Honor | Baterai → Peluncuran aplikasi → Music → Kelola manual |
+| Infinix / Tecno / itel | Phone Master → Penghemat daya → lindungi Music |
+| Pixel / Nothing / Motorola | Info aplikasi → Baterai → Tanpa batasan |
 
 ---
 

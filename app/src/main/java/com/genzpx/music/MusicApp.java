@@ -26,6 +26,14 @@ public class MusicApp extends Application {
     public void onCreate() {
         super.onCreate();
         Prefs.init(this);
+
+        // Proses baru dimulai padahal penanda pemutaran masih menyala berarti
+        // proses sebelumnya dibunuh paksa saat sedang memutar.
+        if (Prefs.get().isPlaybackFlagSet()) {
+            Prefs.get().setPlaybackFlag(false);
+            Prefs.get().incrementKillCount();
+        }
+
         applyTheme(Prefs.get().getThemeMode());
     }
 

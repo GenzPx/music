@@ -57,4 +57,31 @@ public class Prefs {
 
     public int getLastTab() { return sp.getInt("last_tab", 0); }
     public void setLastTab(int v) { sp.edit().putInt("last_tab", v).apply(); }
+
+    // ---- Deteksi pemutaran yang dihentikan paksa oleh sistem ----
+    //
+    // Penanda ini dinyalakan saat mulai memutar dan dimatikan saat berhenti
+    // secara normal. Kalau proses dibunuh paksa oleh ROM, onDestroy tidak
+    // sempat berjalan sehingga penanda tertinggal menyala. Saat aplikasi
+    // dibuka lagi, sisa penanda itu menandakan pemutaran terputus paksa.
+
+    public boolean isPlaybackFlagSet() { return sp.getBoolean("playing_flag", false); }
+
+    /** commit(), bukan apply(), supaya tersimpan sebelum proses sempat dibunuh. */
+    @SuppressWarnings("ApplySharedPref")
+    public void setPlaybackFlag(boolean v) {
+        sp.edit().putBoolean("playing_flag", v).commit();
+    }
+
+    public int getKillCount() { return sp.getInt("kill_count", 0); }
+    public void incrementKillCount() {
+        sp.edit().putInt("kill_count", getKillCount() + 1).apply();
+    }
+    public void resetKillCount() { sp.edit().putInt("kill_count", 0).apply(); }
+
+    /** Kartu saran hanya muncul kalau belum pernah ditutup permanen. */
+    public boolean isGuardTipDismissed() { return sp.getBoolean("guard_dismissed", false); }
+    public void setGuardTipDismissed(boolean v) {
+        sp.edit().putBoolean("guard_dismissed", v).apply();
+    }
 }

@@ -57,6 +57,7 @@ import com.genzpx.music.data.Prefs;
 import com.genzpx.music.model.Song;
 import com.genzpx.music.playback.PlayerService;
 import com.genzpx.music.util.ArtLoader;
+import com.genzpx.music.util.DeviceGuard;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
@@ -73,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView list;
     private SongAdapter songAdapter;
     private GroupAdapter groupAdapter;
-    private View emptyView, permView, miniPlayer;
+    private View emptyView, permView, miniPlayer, tipCard;
     private TextView emptyText, miniTitle, miniArtist;
     private ImageView miniArt;
     private ImageButton miniPlayPause;
@@ -114,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
         emptyText = findViewById(R.id.empty_text);
         permView = findViewById(R.id.perm_view);
         miniPlayer = findViewById(R.id.mini_player);
+        tipCard = findViewById(R.id.tip_card);
         miniTitle = findViewById(R.id.mini_title);
         miniArtist = findViewById(R.id.mini_artist);
         miniArt = findViewById(R.id.mini_art);
@@ -150,6 +152,14 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.btn_grant).setOnClickListener(v -> requestPerm());
 
+        findViewById(R.id.tip_action).setOnClickListener(v -> new GuardSheet(this).show());
+        findViewById(R.id.tip_close).setOnClickListener(v -> {
+            // Ditutup permanen: jangan pernah ganggu pengguna lagi
+            Prefs.get().setGuardTipDismissed(true);
+            Prefs.get().resetKillCount();
+            tipCard.setVisibility(View.GONE);
+        });
+
         searchBox.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {
@@ -163,11 +173,25 @@ public class MainActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) {}
         });
 
+        updateTipCard();
+
         currentTab = Prefs.get().getLastTab();
         bottomNav.setSelectedItemId(tabToMenuId(currentTab));
 
         if (hasPerm()) loadLibrary();
         else showPermScreen();
+    }
+
+    /**
+     * Kartu saran hanya tampil kalau pemutaran benar-benar pernah dihentikan
+     * paksa oleh sistem (minimal dua kali), dan pengguna belum menutupnya.
+     * Aplikasi tidak pernah menampilkan ini tanpa sebab.
+     */
+    private void updateTipCard() {
+        boolean show = !Prefs.get().isGuardTipDismissed()
+                && Prefs.get().getKillCount() >= 2
+                && !DeviceGuard.isBatteryUnrestricted(this);
+        tipCard.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     private int tabToMenuId(int tab) {
@@ -399,6 +423,10 @@ public class MainActivity extends AppCompatActivity {
             ArtLoader.clear();
             loadLibrary();
         });
+        v.findViewById(R.id.menu_guard).setOnClickListener(x -> {
+            d.dismiss();
+            new GuardSheet(this).show();
+        });
         v.findViewById(R.id.menu_about).setOnClickListener(x -> { d.dismiss(); showAbout(); });
 
         d.setContentView(v);
@@ -460,6 +488,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ---------- Lifecycle ----------
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateTipCard();
+    }
 
     @Override
     protected void onStart() {

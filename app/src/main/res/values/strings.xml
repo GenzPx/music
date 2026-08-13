@@ -53,4 +53,26 @@
     <string name="about_noads_title">Kenapa tidak ada iklan?</string>
     <string name="about_noads_body">Aplikasi ini sengaja dibuat tanpa izin INTERNET di AndroidManifest. Artinya sistem Android sendiri yang melarangnya membuka koneksi jaringan — bukan sekadar janji. Iklan tidak bisa dimuat, data tidak bisa dikirim keluar.\n\nSilakan periksa di Pengaturan &gt; Aplikasi &gt; Music &gt; Izin.</string>
     <string name="about_libs">Dibangun dengan AndroidX (AppCompat, Media, RecyclerView, Palette) dan Material Components.</string>
+
+    <!-- Pembatasan latar belakang bawaan ROM -->
+    <string name="guard_title">Jaga musik tetap jalan</string>
+    <string name="guard_brand_fmt">Panduan untuk %1$s</string>
+    <string name="guard_body">Sebagian ponsel menghentikan aplikasi yang berjalan di latar belakang untuk menghemat baterai. Kalau musik sering berhenti sendiri saat layar mati atau saat berpindah aplikasi, longgarkan pembatasan berikut.\n\nSemuanya opsional. Aplikasi tetap berfungsi tanpa mengubah apa pun.</string>
+    <string name="guard_battery_ok">Penghemat baterai untuk aplikasi ini sudah dilonggarkan.</string>
+    <string name="guard_open_battery">Buka setelan baterai</string>
+    <string name="guard_open_autostart">Buka setelan mulai otomatis</string>
+    <string name="guard_manual_title">Kalau tombol di atas tidak membuka apa pun</string>
+    <string name="guard_step_fmt">%1$d. %2$s</string>
+    <string name="guard_footnote">Nama menu bisa sedikit berbeda tergantung versi sistem. Aplikasi ini tidak pernah mengubah setelan sistem sendiri — hanya membukakan halamannya.</string>
+    <string name="guard_open_failed">Tidak bisa membuka halaman itu di perangkat ini. Silakan ikuti langkah manual di bawah.</string>
+
+    <!-- Kartu saran di layar utama -->
+    <string name="tip_title">Musik sempat berhenti sendiri</string>
+    <string name="tip_body">Sistem menghentikan pemutaran di latar belakang. Ini bisa dilonggarkan.</string>
+    <string name="tip_fix">Lihat cara memperbaiki</string>
+
+    <string name="queue_button">Lihat antrean</string>
+    <string name="queue_title">Antrean (%1$d lagu)</string>
+    <string name="info_title">Info lagu</string>
+    <string name="info_body_fmt">Judul\n%1$s\n\nArtis\n%2$s\n\nAlbum\n%3$s\n\nDurasi\n%4$s\n\nLokasi berkas\n%5$s</string>
 </resources>

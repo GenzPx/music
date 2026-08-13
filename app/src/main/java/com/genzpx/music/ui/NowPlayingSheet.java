@@ -31,6 +31,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.genzpx.music.R;
 import com.genzpx.music.data.Prefs;
@@ -38,6 +39,8 @@ import com.genzpx.music.model.Song;
 import com.genzpx.music.playback.PlayerService;
 import com.genzpx.music.util.ArtLoader;
 import com.genzpx.music.util.TimeUtil;
+import androidx.appcompat.app.AlertDialog;
+import java.util.List;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 /** Layar "sedang diputar" full-width, mirip pemutar bawaan. */
@@ -49,7 +52,7 @@ public class NowPlayingSheet extends BottomSheetDialog {
     private ImageView art;
     private TextView title, artist, posText, durText, sleepText;
     private SeekBar seek;
-    private ImageButton play, next, prev, shuffle, repeat;
+    private ImageButton play, next, prev, shuffle, repeat, queueBtn;
     private boolean userSeeking = false;
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -80,12 +83,30 @@ public class NowPlayingSheet extends BottomSheetDialog {
         prev = findViewById(R.id.np_prev);
         shuffle = findViewById(R.id.np_shuffle);
         repeat = findViewById(R.id.np_repeat);
+        queueBtn = findViewById(R.id.np_queue);
 
         play.setOnClickListener(v -> { service.togglePlayPause(); refresh(); });
         next.setOnClickListener(v -> { service.next(true); refresh(); });
         prev.setOnClickListener(v -> { service.previous(); refresh(); });
         shuffle.setOnClickListener(v -> { service.toggleShuffle(); refresh(); });
         repeat.setOnClickListener(v -> { service.cycleRepeat(); refresh(); });
+
+        queueBtn.setOnClickListener(v -> showQueue());
+
+        // Ketuk dua kali sampul: mundur/maju 10 detik
+        art.setOnClickListener(new View.OnClickListener() {
+            private long lastTap = 0;
+            @Override public void onClick(View v) {
+                long now = System.currentTimeMillis();
+                if (now - lastTap < 400) {
+                    service.seekTo(Math.min(service.position() + 10000, service.duration()));
+                    lastTap = 0;
+                } else {
+                    lastTap = now;
+                }
+            }
+        });
+        art.setOnLongClickListener(v -> { showInfo(); return true; });
 
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
@@ -149,6 +170,40 @@ public class NowPlayingSheet extends BottomSheetDialog {
                 else art.setImageResource(R.drawable.ic_album_placeholder);
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    /** Daftar antrean; ketuk untuk lompat ke lagu itu. */
+    private void showQueue() {
+        List<Song> items = service.getQueue().items();
+        if (items.isEmpty()) return;
+        String[] labels = new String[items.size()];
+        for (int i = 0; i < items.size(); i++) {
+            Song q = items.get(i);
+            labels[i] = (i + 1) + ". " + q.title + "  ·  " + q.artist;
+        }
+        new AlertDialog.Builder(getContext())
+                .setTitle(getContext().getString(R.string.queue_title, items.size()))
+                .setSingleChoiceItems(labels, service.getQueue().currentIndex(), (d, which) -> {
+                    service.playAt(which);
+                    d.dismiss();
+                    refresh();
+                })
+                .setNegativeButton(R.string.close, null)
+                .show();
+    }
+
+    /** Rincian berkas lagu yang sedang diputar. */
+    private void showInfo() {
+        Song s = service.currentSong();
+        if (s == null) return;
+        String body = getContext().getString(R.string.info_body_fmt,
+                s.title, s.artist, s.album,
+                TimeUtil.format(s.duration), s.path);
+        new AlertDialog.Builder(getContext())
+                .setTitle(R.string.info_title)
+                .setMessage(body)
+                .setPositiveButton(R.string.close, null)
+                .show();
     }
 
     private void updateProgress() {

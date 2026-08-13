@@ -30,6 +30,10 @@
         android:text="@string/rescan"
         android:drawableStart="@drawable/ic_refresh"/>
 
+    <TextView android:id="@+id/menu_guard" style="@style/MenuRow"
+        android:text="@string/guard_title"
+        android:drawableStart="@drawable/ic_shield"/>
+
     <TextView android:id="@+id/menu_about" style="@style/MenuRow"
         android:text="@string/about"
         android:drawableStart="@drawable/ic_info"/>

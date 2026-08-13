@@ -217,6 +217,7 @@ public class PlayerService extends Service
         if (player == null || !prepared) { playAfterPrepare = true; return; }
         if (!requestFocus()) return;
         player.start();
+        Prefs.get().setPlaybackFlag(true);
         if (!wakeLock.isHeld()) wakeLock.acquire(10 * 60 * 1000L);
         updateMetadata();
         updateState();
@@ -230,6 +231,7 @@ public class PlayerService extends Service
             player.pause();
             savePosition();
         }
+        Prefs.get().setPlaybackFlag(false);
         if (wakeLock.isHeld()) wakeLock.release();
         updateState();
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -266,6 +268,7 @@ public class PlayerService extends Service
 
     public void stopPlayback() {
         savePosition();
+        Prefs.get().setPlaybackFlag(false);
         releasePlayer();
         abandonFocus();
         if (wakeLock.isHeld()) wakeLock.release();
@@ -514,6 +517,7 @@ public class PlayerService extends Service
     @Override
     public void onDestroy() {
         savePosition();
+        Prefs.get().setPlaybackFlag(false);
         cancelSleepTimer();
         handler.removeCallbacksAndMessages(null);
         releasePlayer();
