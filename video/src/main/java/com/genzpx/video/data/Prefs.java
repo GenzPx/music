@@ -95,6 +95,19 @@ public class Prefs {
     public void incrementKillCount() { sp.edit().putInt("kill_count", getKillCount() + 1).apply(); }
     public void resetKillCount() { sp.edit().putInt("kill_count", 0).apply(); }
 
+    // ---- Tampilan subtitle ----
+
+    public int getSubtitleScale() { return sp.getInt("sub_scale", 100); }   // persen
+    public void setSubtitleScale(int v) { sp.edit().putInt("sub_scale", v).apply(); }
+
+    // ---- Lain-lain ----
+
+    public boolean isResumeEnabled() { return sp.getBoolean("resume", true); }
+    public void setResumeEnabled(boolean v) { sp.edit().putBoolean("resume", v).apply(); }
+
+    public boolean isKeepScreenOn() { return sp.getBoolean("keep_screen", true); }
+    public void setKeepScreenOn(boolean v) { sp.edit().putBoolean("keep_screen", v).apply(); }
+
     public boolean isGuardTipDismissed() { return sp.getBoolean("guard_dismissed", false); }
     public void setGuardTipDismissed(boolean v) { sp.edit().putBoolean("guard_dismissed", v).apply(); }
 }

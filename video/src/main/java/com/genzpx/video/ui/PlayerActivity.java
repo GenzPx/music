@@ -26,10 +26,12 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Rational;
 import android.view.GestureDetector;
+import android.view.ScaleGestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -63,6 +65,7 @@ import androidx.media3.ui.SubtitleView;
 import com.genzpx.video.R;
 import com.genzpx.video.data.Prefs;
 import com.genzpx.video.data.VideoLibrary;
+import com.genzpx.video.data.Watchlist;
 import com.genzpx.video.model.Video;
 import com.genzpx.video.playback.AudioModeService;
 import com.genzpx.video.util.Fmt;
@@ -102,6 +105,11 @@ public class PlayerActivity extends AppCompatActivity {
     private int index = 0;
 
     private boolean locked = false;
+    private boolean kidsLock = false;      // kunci anak: seluruh layar tak bisa disentuh
+    private long sleepAtMs = 0;            // 0 berarti timer mati
+    private long repeatA = -1, repeatB = -1;   // penanda ulang bagian A-B
+    private float videoScale = 1f;         // zoom cubit
+    private ScaleGestureDetector pinch;
     private boolean controlsVisible = true;
     private boolean userSeeking = false;
     private boolean inPip = false;
@@ -126,7 +134,13 @@ public class PlayerActivity extends AppCompatActivity {
                     durText.setText(Fmt.time(dur));
                 }
                 posText.setText(Fmt.time(pos));
+
+                // Ulang bagian A-B
+                if (repeatA >= 0 && repeatB > repeatA && pos >= repeatB) {
+                    player.seekTo(repeatA);
+                }
             }
+            checkSleepTimer();
             handler.postDelayed(this, 500);
         }
     };
@@ -137,7 +151,9 @@ public class PlayerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_player);
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if (Prefs.get().isKeepScreenOn()) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
 
         playerView = findViewById(R.id.player_view);
         controls = findViewById(R.id.controls);
@@ -202,7 +218,11 @@ public class PlayerActivity extends AppCompatActivity {
                 Math.min(Prefs.get().getResizeMode(), RESIZE_MODES.length - 1)]);
 
         SubtitleView sv = playerView.getSubtitleView();
-        if (sv != null) sv.setUserDefaultStyle();
+        if (sv != null) {
+            sv.setUserDefaultStyle();
+            sv.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION
+                    * (Prefs.get().getSubtitleScale() / 100f));
+        }
 
         MediaItem item;
         long startAt = 0;
@@ -210,8 +230,9 @@ public class PlayerActivity extends AppCompatActivity {
         if (current != null) {
             item = MediaItem.fromUri(current.uri());
             titleText.setText(current.title);
-            startAt = Prefs.get().getPosition(current.id);
+            startAt = Prefs.get().isResumeEnabled() ? Prefs.get().getPosition(current.id) : 0;
             Prefs.get().setLastVideoId(current.id);
+            Watchlist.get().addHistory(current.id);
         } else if (data != null) {
             item = MediaItem.fromUri(data);
         } else {
@@ -273,7 +294,20 @@ public class PlayerActivity extends AppCompatActivity {
         findViewById(R.id.btn_ff).setOnClickListener(v -> seekBy(10000));
 
         btnLock.setOnClickListener(v -> setLocked(true));
-        lockOverlay.setOnClickListener(v -> setLocked(false));
+
+        lockOverlay.setOnClickListener(v -> {
+            if (kidsLock) {
+                // Sengaja dipersulit: anak kecil tidak akan sengaja menahan tombol
+                Toast.makeText(this, R.string.kids_lock_hint, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            setLocked(false);
+        });
+        lockOverlay.setOnLongClickListener(v -> {
+            kidsLock = false;
+            setLocked(false);
+            return true;
+        });
 
         btnRotate.setOnClickListener(v -> {
             int o = getResources().getConfiguration().orientation;
@@ -367,8 +401,33 @@ public class PlayerActivity extends AppCompatActivity {
             }
         });
 
+        pinch = new ScaleGestureDetector(this,
+                new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override public boolean onScale(@NonNull ScaleGestureDetector d) {
+                videoScale = Math.max(1f, Math.min(3f, videoScale * d.getScaleFactor()));
+                View sv = playerView.getVideoSurfaceView();
+                if (sv != null) {
+                    sv.setScaleX(videoScale);
+                    sv.setScaleY(videoScale);
+                }
+                showHud(Math.round(videoScale * 100) + "%");
+                return true;
+            }
+
+            @Override public void onScaleEnd(@NonNull ScaleGestureDetector d) {
+                hideHudSoon();
+            }
+        });
+
         playerView.setOnTouchListener((v, ev) -> {
             if (locked) return true;
+
+            pinch.onTouchEvent(ev);
+            if (pinch.isInProgress() || ev.getPointerCount() > 1) {
+                gestureMode = -1;   // jangan campur dengan gestur satu jari
+                return true;
+            }
+
             gestures.onTouchEvent(ev);
 
             switch (ev.getActionMasked()) {
@@ -382,6 +441,7 @@ public class PlayerActivity extends AppCompatActivity {
                     break;
 
                 case MotionEvent.ACTION_MOVE: {
+                    if (gestureMode == -1) break;
                     float dx = ev.getX() - gestureStartX;
                     float dy = ev.getY() - gestureStartY;
                     float threshold = 40f;
@@ -420,6 +480,7 @@ public class PlayerActivity extends AppCompatActivity {
 
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
+                    if (gestureMode == -1) { gestureMode = 0; break; }
                     if (gestureMode == 1) {
                         float dx = ev.getX() - gestureStartX;
                         long delta = (long) (dx / 100f * 10000);
@@ -506,11 +567,19 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void showMore() {
         handler.removeCallbacks(hideControls);
+        boolean fav = current != null && Watchlist.get().isFavorite(current.id);
+
         List<String> items = new ArrayList<>();
         items.add(getString(R.string.menu_speed));
         items.add(getString(R.string.menu_resize));
         items.add(getString(R.string.menu_subtitle));
+        items.add(getString(R.string.menu_subtitle_size));
         items.add(getString(R.string.menu_audio_track));
+        items.add(getString(R.string.menu_ab_repeat));
+        items.add(getString(sleepAtMs > 0 ? R.string.menu_sleep_on : R.string.menu_sleep));
+        items.add(getString(R.string.menu_kids_lock));
+        items.add(getString(fav ? R.string.remove_favorite : R.string.add_favorite));
+        items.add(getString(R.string.menu_share));
         items.add(getString(R.string.menu_info));
 
         new AlertDialog.Builder(this)
@@ -519,12 +588,158 @@ public class PlayerActivity extends AppCompatActivity {
                         case 0: showSpeedDialog(); break;
                         case 1: cycleResize(); break;
                         case 2: showTrackDialog(C.TRACK_TYPE_TEXT); break;
-                        case 3: showTrackDialog(C.TRACK_TYPE_AUDIO); break;
+                        case 3: showSubtitleSizeDialog(); break;
+                        case 4: showTrackDialog(C.TRACK_TYPE_AUDIO); break;
+                        case 5: showAbRepeatDialog(); break;
+                        case 6: showSleepDialog(); break;
+                        case 7: enableKidsLock(); break;
+                        case 8: toggleFavorite(); break;
+                        case 9: shareVideo(); break;
                         default: showInfo(); break;
                     }
                 })
                 .setOnDismissListener(d -> scheduleHide())
                 .show();
+    }
+
+    // ---------- Timer tidur ----------
+
+    private void showSleepDialog() {
+        final int[] mins = {0, 15, 30, 45, 60, 90};
+        String[] labels = new String[mins.length];
+        labels[0] = getString(R.string.sleep_off);
+        for (int i = 1; i < mins.length; i++) {
+            labels[i] = getString(R.string.sleep_minutes, mins[i]);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.menu_sleep)
+                .setItems(labels, (d, which) -> {
+                    if (which == 0) {
+                        sleepAtMs = 0;
+                        Toast.makeText(this, R.string.sleep_cancelled, Toast.LENGTH_SHORT).show();
+                    } else {
+                        sleepAtMs = SystemClock.elapsedRealtime() + mins[which] * 60_000L;
+                        Toast.makeText(this, getString(R.string.sleep_set, mins[which]),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
+    }
+
+    /** Dipanggil tiap denyut ticker; menjeda pemutaran begitu waktunya habis. */
+    private void checkSleepTimer() {
+        if (sleepAtMs <= 0) return;
+        if (SystemClock.elapsedRealtime() >= sleepAtMs) {
+            sleepAtMs = 0;
+            if (player != null) player.pause();
+            Toast.makeText(this, R.string.sleep_done, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    // ---------- Ulang bagian A-B ----------
+
+    private void showAbRepeatDialog() {
+        String[] labels;
+        if (repeatA < 0) {
+            labels = new String[]{getString(R.string.ab_set_a)};
+        } else if (repeatB < 0) {
+            labels = new String[]{getString(R.string.ab_set_b), getString(R.string.ab_clear)};
+        } else {
+            labels = new String[]{getString(R.string.ab_clear)};
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.menu_ab_repeat)
+                .setItems(labels, (d, which) -> {
+                    long pos = player.getCurrentPosition();
+                    if (repeatA < 0) {
+                        repeatA = pos;
+                        showHud(getString(R.string.ab_a_at, Fmt.time(pos)));
+                        hideHudSoon();
+                    } else if (repeatB < 0) {
+                        if (which == 0) {
+                            if (pos <= repeatA) {
+                                Toast.makeText(this, R.string.ab_b_too_early,
+                                        Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                            repeatB = pos;
+                            showHud(getString(R.string.ab_active,
+                                    Fmt.time(repeatA), Fmt.time(repeatB)));
+                            hideHudSoon();
+                        } else {
+                            clearAbRepeat();
+                        }
+                    } else {
+                        clearAbRepeat();
+                    }
+                })
+                .show();
+    }
+
+    private void clearAbRepeat() {
+        repeatA = -1;
+        repeatB = -1;
+        Toast.makeText(this, R.string.ab_cleared, Toast.LENGTH_SHORT).show();
+    }
+
+    // ---------- Kunci anak ----------
+
+    /**
+     * Kunci anak mengabaikan semua sentuhan sampai tombol buka ditahan lama,
+     * supaya video tidak berhenti gara-gara layar dicolek.
+     */
+    private void enableKidsLock() {
+        kidsLock = true;
+        setLocked(true);
+        Toast.makeText(this, R.string.kids_lock_on, Toast.LENGTH_LONG).show();
+    }
+
+    // ---------- Ukuran subtitle ----------
+
+    private void showSubtitleSizeDialog() {
+        final int[] scales = {75, 100, 125, 150, 200};
+        String[] labels = new String[scales.length];
+        int checked = 1;
+        int cur = Prefs.get().getSubtitleScale();
+        for (int i = 0; i < scales.length; i++) {
+            labels[i] = scales[i] + "%";
+            if (scales[i] == cur) checked = i;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.menu_subtitle_size)
+                .setSingleChoiceItems(labels, checked, (d, which) -> {
+                    Prefs.get().setSubtitleScale(scales[which]);
+                    SubtitleView sv = playerView.getSubtitleView();
+                    if (sv != null) {
+                        sv.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION
+                                * (scales[which] / 100f));
+                    }
+                    d.dismiss();
+                })
+                .show();
+    }
+
+    // ---------- Favorit dan bagikan ----------
+
+    private void toggleFavorite() {
+        if (current == null) return;
+        boolean added = Watchlist.get().toggleFavorite(current.id);
+        Toast.makeText(this, added ? R.string.added_favorite : R.string.removed_favorite,
+                Toast.LENGTH_SHORT).show();
+    }
+
+    private void shareVideo() {
+        if (current == null) return;
+        try {
+            Intent it = new Intent(Intent.ACTION_SEND)
+                    .setType("video/*")
+                    .putExtra(Intent.EXTRA_STREAM, current.uri())
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(it, getString(R.string.menu_share)));
+        } catch (Exception e) {
+            Toast.makeText(this, R.string.share_failed, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showSpeedDialog() {
@@ -715,6 +930,10 @@ public class PlayerActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        if (kidsLock) {
+            Toast.makeText(this, R.string.kids_lock_hint, Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (locked) { Toast.makeText(this, R.string.locked_hint, Toast.LENGTH_SHORT).show(); return; }
         super.onBackPressed();
     }

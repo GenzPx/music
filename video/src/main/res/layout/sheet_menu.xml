@@ -18,6 +18,18 @@
         android:text="@string/title_folders"
         android:drawableStart="@drawable/ic_folder"/>
 
+    <TextView android:id="@+id/menu_favorites" style="@style/MenuRow"
+        android:text="@string/title_favorites"
+        android:drawableStart="@drawable/ic_heart"/>
+
+    <TextView android:id="@+id/menu_history" style="@style/MenuRow"
+        android:text="@string/title_history"
+        android:drawableStart="@drawable/ic_history"/>
+
+    <TextView android:id="@+id/menu_continue" style="@style/MenuRow"
+        android:text="@string/menu_continue"
+        android:drawableStart="@drawable/ic_resume"/>
+
     <TextView android:id="@+id/menu_sort" style="@style/MenuRow"
         android:text="@string/sort_title"
         android:drawableStart="@drawable/ic_sort"/>

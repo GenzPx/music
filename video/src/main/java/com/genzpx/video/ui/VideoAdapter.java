@@ -41,14 +41,22 @@ import java.util.List;
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VH> {
 
     public interface OnClick { void onVideo(List<Video> list, int position); }
+    public interface OnLongClick { void onLongPress(Video video); }
 
     private List<Video> data = new ArrayList<>();
     private final OnClick listener;
+    private OnLongClick longListener;
     private boolean grid;
 
     public VideoAdapter(OnClick l, boolean grid) {
         this.listener = l;
         this.grid = grid;
+    }
+
+    public VideoAdapter(OnClick l, boolean grid, OnLongClick ll) {
+        this.listener = l;
+        this.grid = grid;
+        this.longListener = ll;
     }
 
     public void submit(List<Video> list) {
@@ -99,6 +107,17 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VH> {
         h.itemView.setOnClickListener(x -> {
             if (listener != null) listener.onVideo(data, h.getAdapterPosition());
         });
+        h.itemView.setOnLongClickListener(x -> {
+            if (longListener == null) return false;
+            longListener.onLongPress(v);
+            return true;
+        });
+
+        if (h.favMark != null) {
+            h.favMark.setVisibility(
+                    com.genzpx.video.data.Watchlist.get().isFavorite(v.id)
+                            ? View.VISIBLE : View.GONE);
+        }
     }
 
     @Override public int getItemCount() { return data.size(); }
@@ -106,7 +125,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VH> {
     static class VH extends RecyclerView.ViewHolder {
         final TextView title, meta;
         final TextView meta2;
-        final ImageView thumb;
+        final ImageView thumb, favMark;
         final ProgressBar progress;
         private ThumbTask task;
 
@@ -116,6 +135,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VH> {
             meta = v.findViewById(R.id.meta);
             meta2 = v.findViewById(R.id.meta2);
             thumb = v.findViewById(R.id.thumb);
+            favMark = v.findViewById(R.id.fav_mark);
             progress = v.findViewById(R.id.watch_progress);
         }
 

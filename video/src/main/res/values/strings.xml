@@ -99,4 +99,45 @@
     <string name="tip_title">Pemutaran sempat berhenti sendiri</string>
     <string name="tip_body">Sistem menghentikan aplikasi di latar belakang. Ini bisa dilonggarkan.</string>
     <string name="tip_fix">Lihat cara memperbaiki</string>
+
+    <!-- v1.1: favorit, riwayat, timer tidur, kunci anak, A-B, subtitle -->
+    <string name="title_favorites">Favorit</string>
+    <string name="title_history">Riwayat tontonan</string>
+    <string name="no_favorites">Belum ada video favorit.\nTahan video lalu pilih Favorit.</string>
+    <string name="no_history">Belum ada riwayat tontonan.</string>
+    <string name="menu_continue">Lanjutkan menonton</string>
+    <string name="no_continue">Tidak ada tontonan yang tertunda.</string>
+    <string name="add_favorite">Tambahkan ke Favorit</string>
+    <string name="remove_favorite">Hapus dari Favorit</string>
+    <string name="added_favorite">Ditambahkan ke Favorit</string>
+    <string name="removed_favorite">Dihapus dari Favorit</string>
+    <string name="resume_from">Lanjutkan dari %1$s</string>
+    <string name="play_from_start">Putar dari awal</string>
+    <string name="menu_share">Bagikan</string>
+    <string name="share_failed">Tidak bisa membagikan berkas ini</string>
+
+    <string name="menu_sleep">Timer tidur</string>
+    <string name="menu_sleep_on">Timer tidur (aktif)</string>
+    <string name="sleep_off">Matikan timer</string>
+    <string name="sleep_minutes">%1$d menit</string>
+    <string name="sleep_set">Video berhenti dalam %1$d menit</string>
+    <string name="sleep_cancelled">Timer tidur dibatalkan</string>
+    <string name="sleep_done">Timer habis, video dijeda</string>
+
+    <string name="menu_ab_repeat">Ulang bagian A-B</string>
+    <string name="ab_set_a">Tandai titik awal (A)</string>
+    <string name="ab_set_b">Tandai titik akhir (B)</string>
+    <string name="ab_clear">Hapus penanda</string>
+    <string name="ab_a_at">Titik A di %1$s</string>
+    <string name="ab_active">Mengulang %1$s sampai %2$s</string>
+    <string name="ab_b_too_early">Titik B harus setelah titik A</string>
+    <string name="ab_cleared">Penanda A-B dihapus</string>
+
+    <string name="menu_kids_lock">Kunci anak</string>
+    <string name="kids_lock_on">Kunci anak aktif. Tahan ikon gembok untuk membuka.</string>
+    <string name="kids_lock_hint">Tahan ikon gembok untuk membuka kunci</string>
+
+    <string name="menu_subtitle_size">Ukuran subtitle</string>
+    <string name="opt_resume">Lanjutkan dari posisi terakhir</string>
+    <string name="opt_keep_screen">Layar tetap menyala saat memutar</string>
 </resources>

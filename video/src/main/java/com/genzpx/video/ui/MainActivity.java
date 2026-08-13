@@ -29,6 +29,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -44,6 +45,7 @@ import com.genzpx.video.R;
 import com.genzpx.video.VideoApp;
 import com.genzpx.video.data.Prefs;
 import com.genzpx.video.data.VideoLibrary;
+import com.genzpx.video.data.Watchlist;
 import com.genzpx.video.model.Video;
 import com.genzpx.video.util.DeviceGuard;
 import com.genzpx.video.util.ThumbLoader;
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton backBtn, viewBtn;
 
     private boolean showingFolders = false;
+    private int viewMode = 0;   // 0 semua video, 2 favorit, 3 riwayat
     private VideoLibrary.Folder openedFolder = null;
     private boolean searching = false;
 
@@ -83,14 +86,19 @@ public class MainActivity extends AppCompatActivity {
         backBtn = findViewById(R.id.btn_back);
         viewBtn = findViewById(R.id.btn_view);
 
-        videoAdapter = new VideoAdapter(this::playFrom, Prefs.get().isGridView());
+        videoAdapter = new VideoAdapter(this::playFrom, Prefs.get().isGridView(), this::showVideoMenu);
         folderAdapter = new FolderAdapter(f -> { openedFolder = f; showContent(); });
         applyLayoutManager();
         list.setAdapter(videoAdapter);
 
         findViewById(R.id.btn_search).setOnClickListener(v -> toggleSearch());
         findViewById(R.id.btn_menu).setOnClickListener(v -> showMenu());
-        backBtn.setOnClickListener(v -> { openedFolder = null; searching = false; showContent(); });
+        backBtn.setOnClickListener(v -> {
+            if (viewMode != 0) viewMode = 0;
+            openedFolder = null;
+            searching = false;
+            showContent();
+        });
 
         viewBtn.setOnClickListener(v -> {
             Prefs.get().setGridView(!Prefs.get().isGridView());
@@ -216,6 +224,22 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        if (viewMode == 2 || viewMode == 3) {
+            boolean fav = viewMode == 2;
+            toolbarTitle.setText(fav ? R.string.title_favorites : R.string.title_history);
+            backBtn.setVisibility(View.VISIBLE);
+            viewBtn.setVisibility(View.VISIBLE);
+            applyLayoutManager();
+            List<Video> items = fav
+                    ? Watchlist.get().favorites()
+                    : Watchlist.get().history();
+            videoAdapter.submit(items);
+            list.setAdapter(videoAdapter);
+            updateEmpty(items.isEmpty(),
+                    getString(fav ? R.string.no_favorites : R.string.no_history));
+            return;
+        }
+
         backBtn.setVisibility(View.GONE);
 
         if (showingFolders) {
@@ -235,6 +259,112 @@ public class MainActivity extends AppCompatActivity {
             list.setAdapter(videoAdapter);
             updateEmpty(v.isEmpty(), getString(R.string.empty));
         }
+    }
+
+    /** Daftar video yang tontonannya belum selesai, langsung bisa dilanjutkan. */
+    private void showContinueWatching() {
+        List<Video> items = Watchlist.get().continueWatching();
+        if (items.isEmpty()) {
+            Toast.makeText(this, R.string.no_continue, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] labels = new String[items.size()];
+        for (int i = 0; i < items.size(); i++) {
+            Video v = items.get(i);
+            long pos = Prefs.get().getPosition(v.id);
+            labels[i] = v.title + "\n" + com.genzpx.video.util.Fmt.time(pos)
+                    + " / " + com.genzpx.video.util.Fmt.time(v.duration);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.menu_continue)
+                .setItems(labels, (d, which) -> playFrom(items, which))
+                .show();
+    }
+
+    /** Menu tekan-lama pada satu video. */
+    private void showVideoMenu(Video video) {
+        boolean fav = Watchlist.get().isFavorite(video.id);
+        long saved = Prefs.get().getPosition(video.id);
+
+        List<String> labels = new ArrayList<>();
+        final List<Integer> actions = new ArrayList<>();
+
+        labels.add(getString(fav ? R.string.remove_favorite : R.string.add_favorite));
+        actions.add(0);
+
+        if (saved > 0) {
+            labels.add(getString(R.string.resume_from,
+                    com.genzpx.video.util.Fmt.time(saved)));
+            actions.add(1);
+            labels.add(getString(R.string.play_from_start));
+            actions.add(2);
+        }
+
+        labels.add(getString(R.string.menu_share));
+        actions.add(3);
+        labels.add(getString(R.string.menu_info));
+        actions.add(4);
+
+        new AlertDialog.Builder(this)
+                .setTitle(video.title)
+                .setItems(labels.toArray(new String[0]), (d, which) -> {
+                    switch (actions.get(which)) {
+                        case 0:
+                            boolean added = Watchlist.get().toggleFavorite(video.id);
+                            Toast.makeText(this,
+                                    added ? R.string.added_favorite : R.string.removed_favorite,
+                                    Toast.LENGTH_SHORT).show();
+                            if (viewMode == 2) showContent();
+                            break;
+                        case 1:
+                            playSingle(video);
+                            break;
+                        case 2:
+                            Prefs.get().clearPosition(video.id);
+                            playSingle(video);
+                            break;
+                        case 3:
+                            shareVideo(video);
+                            break;
+                        default:
+                            showVideoInfo(video);
+                            break;
+                    }
+                })
+                .show();
+    }
+
+    private void playSingle(Video v) {
+        List<Video> one = new ArrayList<>();
+        one.add(v);
+        playFrom(one, 0);
+    }
+
+    private void shareVideo(Video v) {
+        try {
+            startActivity(Intent.createChooser(new Intent(Intent.ACTION_SEND)
+                    .setType("video/*")
+                    .putExtra(Intent.EXTRA_STREAM, v.uri())
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                    getString(R.string.menu_share)));
+        } catch (Exception e) {
+            Toast.makeText(this, R.string.share_failed, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showVideoInfo(Video v) {
+        String res = v.resolution().isEmpty() ? "-" : v.resolution();
+        String body = getString(R.string.info_body_fmt,
+                v.title,
+                com.genzpx.video.util.Fmt.time(v.duration),
+                res,
+                com.genzpx.video.util.Fmt.size(v.size),
+                v.path);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.menu_info)
+                .setMessage(body)
+                .setPositiveButton(R.string.close, null)
+                .show();
     }
 
     private void updateEmpty(boolean empty, String msg) {
@@ -280,8 +410,28 @@ public class MainActivity extends AppCompatActivity {
         foldersRow.setOnClickListener(x -> {
             d.dismiss();
             showingFolders = !showingFolders;
+            viewMode = 0;
             openedFolder = null;
             showContent();
+        });
+
+        v.findViewById(R.id.menu_favorites).setOnClickListener(x -> {
+            d.dismiss();
+            viewMode = 2;
+            showingFolders = false;
+            openedFolder = null;
+            showContent();
+        });
+        v.findViewById(R.id.menu_history).setOnClickListener(x -> {
+            d.dismiss();
+            viewMode = 3;
+            showingFolders = false;
+            openedFolder = null;
+            showContent();
+        });
+        v.findViewById(R.id.menu_continue).setOnClickListener(x -> {
+            d.dismiss();
+            showContinueWatching();
         });
 
         v.findViewById(R.id.menu_sort).setOnClickListener(x -> { d.dismiss(); showSort(); });
@@ -322,17 +472,25 @@ public class MainActivity extends AppCompatActivity {
     private void showPlaybackOptions() {
         String[] items = {
                 getString(R.string.opt_audio_mode),
-                getString(R.string.opt_auto_pip)
+                getString(R.string.opt_auto_pip),
+                getString(R.string.opt_resume),
+                getString(R.string.opt_keep_screen)
         };
         boolean[] checked = {
                 Prefs.get().isAudioModeEnabled(),
-                Prefs.get().isAutoPip()
+                Prefs.get().isAutoPip(),
+                Prefs.get().isResumeEnabled(),
+                Prefs.get().isKeepScreenOn()
         };
         new AlertDialog.Builder(this)
                 .setTitle(R.string.menu_playback)
                 .setMultiChoiceItems(items, checked, (d, which, isChecked) -> {
-                    if (which == 0) Prefs.get().setAudioModeEnabled(isChecked);
-                    else Prefs.get().setAutoPip(isChecked);
+                    switch (which) {
+                        case 0: Prefs.get().setAudioModeEnabled(isChecked); break;
+                        case 1: Prefs.get().setAutoPip(isChecked); break;
+                        case 2: Prefs.get().setResumeEnabled(isChecked); break;
+                        default: Prefs.get().setKeepScreenOn(isChecked); break;
+                    }
                 })
                 .setPositiveButton(R.string.close, null)
                 .show();
@@ -382,6 +540,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        if (viewMode != 0 && !searching && openedFolder == null) {
+            viewMode = 0;
+            showContent();
+            return;
+        }
         if (openedFolder != null || searching) {
             openedFolder = null;
             searching = false;

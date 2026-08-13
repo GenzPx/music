@@ -20,6 +20,16 @@
             android:scaleType="centerCrop"
             android:contentDescription="@null"/>
 
+        <ImageView
+            android:id="@+id/fav_mark"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_heart_filled"
+            android:visibility="gone"
+            android:contentDescription="@null"/>
+
         <ProgressBar
             android:id="@+id/watch_progress"
             style="?android:attr/progressBarStyleHorizontal"

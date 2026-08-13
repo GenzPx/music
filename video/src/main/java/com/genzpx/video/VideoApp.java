@@ -20,12 +20,14 @@ package com.genzpx.video;
 import android.app.Application;
 import androidx.appcompat.app.AppCompatDelegate;
 import com.genzpx.video.data.Prefs;
+import com.genzpx.video.data.Watchlist;
 
 public class VideoApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
         Prefs.init(this);
+        Watchlist.init(this);
         applyTheme(Prefs.get().getThemeMode());
     }
 

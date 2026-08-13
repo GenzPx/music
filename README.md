@@ -211,3 +211,17 @@ yang sama. Ini disengaja: supaya tidak ada yang mengambil kode ini lalu
 merilisnya kembali dengan iklan di dalamnya.
 
 Dibuat oleh **GenzPx**.
+
+### Baru di Video 1.2
+
+- **Favorit** — tahan video di daftar, atau lewat menu saat memutar. Video favorit dapat tanda hati di gambar mini.
+- **Riwayat tontonan** — 100 video terakhir, tercatat otomatis.
+- **Lanjutkan menonton** — daftar tontonan yang belum selesai lengkap dengan posisinya, sekali ketuk langsung lanjut.
+- **Timer tidur** — 15/30/45/60/90 menit, video dijeda sendiri.
+- **Kunci anak** — layar benar-benar mati sentuh, dibuka dengan menahan ikon gembok. Tombol kembali juga ikut dikunci.
+- **Ulang bagian A-B** — tandai dua titik, bagian itu diputar berulang.
+- **Zoom cubit** — perbesar gambar sampai 3x dengan dua jari.
+- **Ukuran subtitle** bisa diatur 75%–200%.
+- **Tahan video** untuk favorit, lanjutkan dari posisi, putar dari awal, bagikan, dan info berkas.
+- Setelan baru: matikan "lanjutkan dari posisi terakhir" dan "layar tetap menyala".
+
