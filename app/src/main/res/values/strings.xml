@@ -49,7 +49,7 @@
     <string name="about_version_fmt">Versi %1$s (build %2$d)</string>
     <string name="about_author">Dibuat oleh GenzPX</string>
     <string name="about_license">Lisensi GPL-3.0</string>
-    <string name="about_repo">github.com/GenzPX/music</string>
+    <string name="about_repo">github.com/GenzPx/music</string>
     <string name="about_noads_title">Kenapa tidak ada iklan?</string>
     <string name="about_noads_body">Aplikasi ini sengaja dibuat tanpa izin INTERNET di AndroidManifest. Artinya sistem Android sendiri yang melarangnya membuka koneksi jaringan — bukan sekadar janji. Iklan tidak bisa dimuat, data tidak bisa dikirim keluar.\n\nSilakan periksa di Pengaturan &gt; Aplikasi &gt; Music &gt; Izin.</string>
     <string name="about_libs">Dibangun dengan AndroidX (AppCompat, Media, RecyclerView, Palette) dan Material Components.</string>

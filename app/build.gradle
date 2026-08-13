@@ -40,8 +40,9 @@ android {
             }
         }
         debug {
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-debug"
+            // Tidak ada suffix: tidak pernah ada aplikasi "Music debug" terpisah.
+            // Rilis resmi tetap hanya satu APK dari buildType release.
+            minifyEnabled false
         }
     }
 

@@ -98,7 +98,8 @@ jobs:
           echo "version=$VER" >> "$GITHUB_OUTPUT"
           ls -lh "$NEW"
 
-      - name: Unggah artifact
+      - name: Unggah artifact (hanya untuk uji coba manual)
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: Music-APK

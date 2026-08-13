@@ -71,7 +71,7 @@ bersamaan.
 ## Build sendiri
 
 ```bash
-git clone https://github.com/GenzPX/music.git
+git clone https://github.com/GenzPx/music.git
 cd music
 ./gradlew assembleRelease
 ```
