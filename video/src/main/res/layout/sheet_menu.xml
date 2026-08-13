@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingTop="12dp"
+    android:paddingBottom="24dp">
+
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="10dp"
+        android:background="@color/divider"/>
+
+    <TextView android:id="@+id/menu_folders" style="@style/MenuRow"
+        android:text="@string/title_folders"
+        android:drawableStart="@drawable/ic_folder"/>
+
+    <TextView android:id="@+id/menu_sort" style="@style/MenuRow"
+        android:text="@string/sort_title"
+        android:drawableStart="@drawable/ic_sort"/>
+
+    <TextView android:id="@+id/menu_playback" style="@style/MenuRow"
+        android:text="@string/menu_playback"
+        android:drawableStart="@drawable/ic_tune"/>
+
+    <TextView android:id="@+id/menu_theme" style="@style/MenuRow"
+        android:text="@string/theme"
+        android:drawableStart="@drawable/ic_theme"/>
+
+    <TextView android:id="@+id/menu_guard" style="@style/MenuRow"
+        android:text="@string/guard_title"
+        android:drawableStart="@drawable/ic_shield"/>
+
+    <TextView android:id="@+id/menu_rescan" style="@style/MenuRow"
+        android:text="@string/rescan"
+        android:drawableStart="@drawable/ic_refresh"/>
+
+    <TextView android:id="@+id/menu_about" style="@style/MenuRow"
+        android:text="@string/about"
+        android:drawableStart="@drawable/ic_info"/>
+</LinearLayout>

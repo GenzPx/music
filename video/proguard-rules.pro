@@ -1,0 +1,3 @@
+-keep class com.genzpx.video.model.** { *; }
+-keepclassmembers class * extends android.app.Service { public *; }
+-dontwarn android.support.**

@@ -13,5 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Music"
-include ':app'
+rootProject.name = "NoAds"
+include ':music'
+include ':video'

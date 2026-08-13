@@ -1,10 +1,17 @@
-# Music
+# Music & Video
 
-Pemutar musik offline untuk Android. Tanpa iklan, tanpa login, tanpa akun.
+Dua pemutar media offline untuk Android. Tanpa iklan, tanpa login, tanpa akun.
 
-Dibuat karena aplikasi Musik bawaan ColorOS di Indonesia menampilkan iklan
-setiap kali dibuka, dan toggle "Hide Ads" yang tersedia di sebagian negara
-lain tidak ada di region ini.
+Dibuat karena aplikasi Musik dan Video bawaan ColorOS di Indonesia menampilkan
+iklan setiap kali dibuka, dan toggle penyembunyi iklan yang tersedia di
+sebagian negara lain tidak ada di region ini.
+
+| Aplikasi | Isi |
+|---|---|
+| **Music** | Pemutar musik lokal |
+| **Video** | Pemutar video lokal |
+
+Keduanya berdiri sendiri dan bisa dipasang terpisah.
 
 ---
 
@@ -12,25 +19,50 @@ lain tidak ada di region ini.
 
 Ini bukan janji, ini dipaksa sistem operasi.
 
-`AndroidManifest.xml` aplikasi ini **tidak mencantumkan
-`android.permission.INTERNET`**. Tanpa izin itu, Android melarang aplikasi
-membuka koneksi jaringan apa pun di level kernel — walaupun ada kode yang
-mencoba. Konsekuensinya:
+Kedua aplikasi **tidak mencantumkan `android.permission.INTERNET`** di
+`AndroidManifest.xml`. Tanpa izin itu, Android melarang aplikasi membuka
+koneksi jaringan apa pun di level kernel — walaupun ada kode yang mencoba.
+Konsekuensinya:
 
 - Iklan tidak bisa dimuat, karena harus diunduh dari server
 - Data penggunaan tidak bisa dikirim keluar
 - Tidak ada pembaruan diam-diam yang menambahkan iklan
 
+Modul Video memakai Media3 ExoPlayer, dan pustaka itu bisa menyertakan izin
+INTERNET lewat penggabungan manifest. Karena itu manifestnya memuat
+`tools:node="remove"` yang membuang izin tersebut secara paksa dari APK akhir,
+dan modul jaringan Media3 memang tidak dipakai sama sekali.
+
 Silakan buktikan sendiri setelah memasang:
 
-**Pengaturan → Aplikasi → Music → Izin**
+**Pengaturan → Aplikasi → Music (atau Video) → Izin**
 
-Setiap build di CI juga diperiksa otomatis. Kalau APK sampai meminta izin
+Setiap build di CI juga memeriksa kedua APK. Kalau salah satu meminta izin
 internet, build langsung digagalkan sebelum dirilis.
 
 ---
 
-## Fitur
+## Video
+
+| | |
+|---|---|
+| Format luas | MP4, MKV, WebM, AVI, HEVC, AV1, dan lainnya lewat Media3 ExoPlayer |
+| Jelajah | Semua video atau per folder, tampilan petak atau daftar |
+| Gestur | Geser kiri untuk kecerahan, kanan untuk volume, mendatar untuk maju mundur |
+| Ketuk dua kali | Sisi kiri mundur sepuluh detik, kanan maju, tengah jeda |
+| Lanjutkan | Kembali ke posisi terakhir, dengan indikator kemajuan di daftar |
+| Subtitle | Trek di dalam berkas, bisa dipilih atau dimatikan |
+| Jalur audio | Berpindah bahasa pada berkas bertrek ganda |
+| Kecepatan | 0,5x sampai 2x |
+| Rasio | Muat layar, perbesar, atau penuhi layar |
+| Layar mengambang | Picture in Picture, opsional |
+| Audio saja | Lanjutkan suaranya saat keluar aplikasi, opsional |
+| Kunci layar | Cegah sentuhan tidak sengaja saat menonton |
+| Urutkan | Terbaru, nama, ukuran, atau durasi |
+
+---
+
+## Music
 
 | | |
 |---|---|
@@ -104,12 +136,13 @@ bersamaan.
 ```bash
 git clone https://github.com/GenzPx/music.git
 cd music
-./gradlew assembleRelease
+./gradlew :music:assembleRelease :video:assembleRelease
 ```
 
 Butuh JDK 17 dan Android SDK (compileSdk 34).
 
-Hasilnya ada di `app/build/outputs/apk/release/`.
+Hasilnya ada di `music/build/outputs/apk/release/` dan
+`video/build/outputs/apk/release/`.
 
 ### Menandatangani rilis
 
@@ -137,22 +170,22 @@ Lalu simpan di GitHub sebagai repository secrets:
 ### Merilis versi baru
 
 ```bash
-git tag v0.1
-git push origin v0.1
+git tag v1.0
+git push origin v1.0
 ```
 
-GitHub Actions akan build APK, memverifikasi tidak ada izin internet, lalu
-membuat Release otomatis.
+GitHub Actions akan membangun kedua APK, memverifikasi tidak ada izin
+internet pada masing-masing, lalu membuat Release otomatis.
 
 ---
 
 ## Teknis
 
 - Java, tanpa Kotlin — APK lebih kecil, build lebih cepat
-- `MediaPlayer` + `MediaSessionCompat`, tanpa ExoPlayer
-- Tanpa library pihak ketiga selain AndroidX dan Material Components
+- Music memakai `MediaPlayer` + `MediaSessionCompat`, tanpa ExoPlayer
+- Video memakai Media3 ExoPlayer tanpa modul jaringan
 - Tanpa analitik, tanpa crash reporter, tanpa SDK iklan
-- Ukuran APK sekitar 1,6 MB
+- Music sekitar 1,6 MB; Video sekitar 5 MB
 
 ---
 
@@ -165,4 +198,4 @@ tetapi versi yang disebarluaskan wajib tetap sumber terbuka dengan lisensi
 yang sama. Ini disengaja: supaya tidak ada yang mengambil kode ini lalu
 merilisnya kembali dengan iklan di dalamnya.
 
-Dibuat oleh **GenzPX**.
+Dibuat oleh **GenzPx**.

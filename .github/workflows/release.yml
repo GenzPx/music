@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Versi rilis (contoh: 0.1)'
+        description: 'Versi rilis (contoh: 1.0)'
         required: false
-        default: '0.1'
+        default: '1.0'
 
 permissions:
   contents: write
@@ -50,86 +50,105 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
-            echo "path=$RUNNER_TEMP/release.jks" >> "$GITHUB_OUTPUT"
             echo "Keystore dari secret dipakai."
           else
-            # Tidak ada secret: bikin keystore sementara supaya APK tetap bisa dipasang.
             keytool -genkeypair -v \
               -keystore "$RUNNER_TEMP/release.jks" \
               -alias music -keyalg RSA -keysize 2048 -validity 10000 \
               -storepass android -keypass android \
-              -dname "CN=GenzPX, OU=Music, O=GenzPX, L=Jakarta, C=ID"
-            echo "path=$RUNNER_TEMP/release.jks" >> "$GITHUB_OUTPUT"
-            echo "::warning::KEYSTORE_BASE64 belum diset. Memakai keystore sementara — update APK berikutnya mungkin tidak bisa menimpa versi ini."
+              -dname "CN=GenzPx, OU=NoAds, O=GenzPx, L=Jakarta, C=ID"
+            echo "::warning::KEYSTORE_BASE64 belum diset. Memakai keystore sementara — APK ini tidak bisa menimpa versi yang sudah terpasang."
           fi
+          echo "path=$RUNNER_TEMP/release.jks" >> "$GITHUB_OUTPUT"
 
-      - name: Build APK release
+      - name: Build kedua APK release
         env:
           KEYSTORE_FILE: ${{ steps.keystore.outputs.path }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'android' }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'music' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'android' }}
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew :music:assembleRelease :video:assembleRelease --no-daemon --stacktrace
 
-      - name: Pastikan tidak ada izin INTERNET
+      - name: Pastikan tidak ada izin INTERNET di kedua APK
         run: |
-          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          echo "Memeriksa: $APK"
           BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
-          if "$BT/aapt2" dump badging "$APK" | grep -q "android.permission.INTERNET"; then
-            echo "::error::APK meminta izin INTERNET. Build dibatalkan."
-            exit 1
-          fi
-          echo "OK: APK tidak punya izin INTERNET."
-          "$BT/aapt2" dump badging "$APK" | grep "uses-permission"
+          FAIL=0
+          for APK in $(find music/build/outputs/apk/release video/build/outputs/apk/release -name "*.apk"); do
+            echo "--- Memeriksa $APK ---"
+            "$BT/aapt2" dump badging "$APK" | grep "uses-permission" || true
+            if "$BT/aapt2" dump badging "$APK" | grep -q "android.permission.INTERNET"; then
+              echo "::error::$APK meminta izin INTERNET."
+              FAIL=1
+            else
+              echo "OK: tanpa izin INTERNET"
+            fi
+          done
+          [ "$FAIL" = "0" ] || exit 1
 
       - name: Ganti nama APK
         id: rename
         run: |
-          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
           VER="${GITHUB_REF_NAME#v}"
           if [ -z "$VER" ] || [ "$VER" = "$GITHUB_REF_NAME" ]; then
             VER="${{ github.event.inputs.version }}"
           fi
-          [ -z "$VER" ] && VER="0.1"
-          NEW="Music-v${VER}.apk"
-          cp "$APK" "$NEW"
-          echo "apk=$NEW" >> "$GITHUB_OUTPUT"
+          [ -z "$VER" ] && VER="1.0"
+
+          MUSIC=$(find music/build/outputs/apk/release -name "*.apk" | head -1)
+          VIDEO=$(find video/build/outputs/apk/release -name "*.apk" | head -1)
+          cp "$MUSIC" "Music-v${VER}.apk"
+          cp "$VIDEO" "Video-v${VER}.apk"
+
           echo "version=$VER" >> "$GITHUB_OUTPUT"
-          ls -lh "$NEW"
+          ls -lh Music-v${VER}.apk Video-v${VER}.apk
 
       - name: Unggah artifact (hanya untuk uji coba manual)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: Music-APK
-          path: ${{ steps.rename.outputs.apk }}
+          name: APK
+          path: |
+            Music-v${{ steps.rename.outputs.version }}.apk
+            Video-v${{ steps.rename.outputs.version }}.apk
           retention-days: 90
 
       - name: Buat GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.rename.outputs.apk }}
-          name: Music v${{ steps.rename.outputs.version }}
+          files: |
+            Music-v${{ steps.rename.outputs.version }}.apk
+            Video-v${{ steps.rename.outputs.version }}.apk
+          name: v${{ steps.rename.outputs.version }}
           body: |
-            ## Music v${{ steps.rename.outputs.version }}
+            Dua pemutar media offline tanpa iklan, tanpa login, tanpa akun.
 
-            Pemutar musik offline tanpa iklan, tanpa login, tanpa akun.
+            | Berkas | Isi |
+            |---|---|
+            | `Music-v${{ steps.rename.outputs.version }}.apk` | Pemutar musik |
+            | `Video-v${{ steps.rename.outputs.version }}.apk` | Pemutar video |
 
-            **Tanpa izin INTERNET.** Setiap build diperiksa otomatis —
-            kalau APK sampai meminta izin internet, build langsung digagalkan.
+            Keduanya berdiri sendiri. Pasang salah satu atau dua-duanya.
+
+            **Tanpa izin INTERNET.** Setiap build diperiksa otomatis — kalau
+            salah satu APK sampai meminta izin internet, build digagalkan.
+
+            ### Video
+            Memutar MP4, MKV, HEVC, AV1, dan lainnya lewat Media3 ExoPlayer.
+            Geser untuk mengatur volume, kecerahan, dan maju mundur. Mendukung
+            subtitle di dalam berkas, jalur audio ganda, kecepatan putar,
+            layar mengambang, kunci layar, dan lanjut dari posisi terakhir.
+
+            ### Music
+            Jelajah per Lagu, Album, Artis, dan Folder. Pemutaran latar dengan
+            kontrol notifikasi, timer tidur, equalizer sistem, dan antrean.
 
             ### Cara pasang
-            1. Unduh `Music-v${{ steps.rename.outputs.version }}.apk` di bawah
-            2. Buka file lewat pengelola berkas di HP
+            1. Unduh berkas `.apk` yang diinginkan
+            2. Buka lewat pengelola berkas di HP
             3. Kalau muncul peringatan, izinkan "Instal aplikasi tak dikenal"
-            4. Buka aplikasi, beri izin baca file audio
+            4. Beri izin baca berkas media saat diminta
 
-            ### Perlu diketahui
-            - Minimal Android 7.0 (API 24)
-            - Aplikasi ini tidak menggantikan aplikasi bawaan, keduanya bisa
-              terpasang bersamaan
-            - Sumber terbuka, lisensi GPL-3.0
+            Minimal Android 7.0. Sumber terbuka, lisensi GPL-3.0.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

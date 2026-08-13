@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Video</string>
+
+    <string name="title_videos">Video</string>
+    <string name="title_folders">Folder</string>
+    <string name="show_all_videos">Semua video</string>
+    <string name="folder_count">%1$d video</string>
+
+    <string name="search_hint">Cari video…</string>
+    <string name="type_to_search">Ketik untuk mencari</string>
+    <string name="no_result">Tidak ada hasil</string>
+    <string name="scanning">Memindai video…</string>
+    <string name="empty">Belum ada video ditemukan.\nSalin berkas video ke penyimpanan lalu tekan Pindai ulang.</string>
+
+    <string name="perm_title">Izin diperlukan</string>
+    <string name="perm_body">Video butuh izin membaca berkas video untuk menampilkan isi perangkat ini.\n\nHanya itu. Tidak ada izin internet sama sekali.</string>
+    <string name="grant">Beri izin</string>
+
+    <string name="play">Putar</string>
+    <string name="pause">Jeda</string>
+    <string name="stop">Hentikan</string>
+    <string name="close">Tutup</string>
+    <string name="back">Kembali</string>
+    <string name="search">Cari</string>
+    <string name="menu">Menu</string>
+
+    <!-- Pemutar -->
+    <string name="err_no_video">Tidak ada video untuk diputar</string>
+    <string name="err_playback_title">Gagal memutar</string>
+    <string name="err_playback_body">Berkas ini tidak bisa diputar. Kemungkinan formatnya tidak didukung perangkat atau berkasnya rusak.\n\nKode: %1$s</string>
+    <string name="last_video">Ini video terakhir</string>
+    <string name="locked_hint">Layar terkunci. Ketuk ikon gembok untuk membuka.</string>
+    <string name="pip_failed">Mode layar mengambang tidak tersedia di perangkat ini</string>
+
+    <string name="hud_volume">Volume %1$d%%</string>
+    <string name="hud_brightness">Kecerahan %1$d%%</string>
+
+    <string name="menu_speed">Kecepatan putar</string>
+    <string name="menu_resize">Rasio tampilan</string>
+    <string name="menu_subtitle">Subtitle</string>
+    <string name="menu_audio_track">Jalur audio</string>
+    <string name="menu_info">Info video</string>
+
+    <string name="resize_fit">Muat layar</string>
+    <string name="resize_zoom">Perbesar</string>
+    <string name="resize_fill">Penuhi layar</string>
+
+    <string name="subtitle_off">Matikan subtitle</string>
+    <string name="track_default">Bawaan</string>
+    <string name="no_subtitle">Berkas ini tidak punya subtitle di dalamnya</string>
+    <string name="no_audio_track">Tidak ada jalur audio lain</string>
+
+    <string name="info_body_fmt">Nama\n%1$s\n\nResolusi\n%2$s\n\nDurasi\n%3$s\n\nUkuran\n%4$s\n\nLokasi berkas\n%5$s</string>
+
+    <!-- Menu utama -->
+    <string name="sort_title">Urutkan</string>
+    <string name="sort_date">Terbaru ditambahkan</string>
+    <string name="sort_name">Nama</string>
+    <string name="sort_size">Ukuran terbesar</string>
+    <string name="sort_duration">Durasi terpanjang</string>
+
+    <string name="menu_playback">Opsi pemutaran</string>
+    <string name="opt_audio_mode">Lanjutkan audio saja saat keluar</string>
+    <string name="opt_auto_pip">Layar mengambang saat menekan Home</string>
+
+    <string name="theme">Tema</string>
+    <string name="theme_system">Ikuti sistem</string>
+    <string name="theme_light">Terang</string>
+    <string name="theme_dark">Gelap</string>
+
+    <string name="rescan">Pindai ulang</string>
+    <string name="about">Tentang</string>
+
+    <string name="channel_audio">Pemutaran audio</string>
+    <string name="audio_only_running">Memutar audio saja</string>
+
+    <!-- Tentang -->
+    <string name="about_version_fmt">Versi %1$s (build %2$d)</string>
+    <string name="about_author">Dibuat oleh GenzPx</string>
+    <string name="about_license">Lisensi GPL-3.0</string>
+    <string name="about_repo">github.com/GenzPx/music</string>
+    <string name="about_noads_title">Kenapa tidak ada iklan?</string>
+    <string name="about_noads_body">Aplikasi ini sengaja dibuat tanpa izin INTERNET di AndroidManifest. Artinya sistem Android sendiri yang melarangnya membuka koneksi jaringan — bukan sekadar janji. Iklan tidak bisa dimuat, data tidak bisa dikirim keluar.\n\nSilakan periksa di Pengaturan &gt; Aplikasi &gt; Video &gt; Izin.</string>
+    <string name="about_libs">Dibangun dengan AndroidX dan Media3 ExoPlayer. Modul jaringan Media3 sengaja tidak disertakan.</string>
+
+    <!-- Pembatasan latar belakang ROM -->
+    <string name="guard_title">Jaga pemutaran tetap jalan</string>
+    <string name="guard_brand_fmt">Panduan untuk %1$s</string>
+    <string name="guard_body">Sebagian ponsel menghentikan aplikasi yang berjalan di latar belakang untuk menghemat baterai. Kalau pemutaran sering terputus sendiri, longgarkan pembatasan berikut.\n\nSemuanya opsional. Aplikasi tetap berfungsi tanpa mengubah apa pun.</string>
+    <string name="guard_battery_ok">Penghemat baterai untuk aplikasi ini sudah dilonggarkan.</string>
+    <string name="guard_open_battery">Buka setelan baterai</string>
+    <string name="guard_open_autostart">Buka setelan mulai otomatis</string>
+    <string name="guard_manual_title">Kalau tombol di atas tidak membuka apa pun</string>
+    <string name="guard_step_fmt">%1$d. %2$s</string>
+    <string name="guard_footnote">Nama menu bisa sedikit berbeda tergantung versi sistem. Aplikasi ini tidak pernah mengubah setelan sistem sendiri — hanya membukakan halamannya.</string>
+    <string name="guard_open_failed">Tidak bisa membuka halaman itu di perangkat ini. Silakan ikuti langkah manual di bawah.</string>
+
+    <string name="tip_title">Pemutaran sempat berhenti sendiri</string>
+    <string name="tip_body">Sistem menghentikan aplikasi di latar belakang. Ini bisa dilonggarkan.</string>
+    <string name="tip_fix">Lihat cara memperbaiki</string>
+</resources>
