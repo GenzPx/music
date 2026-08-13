@@ -31,9 +31,15 @@ public class Song implements Serializable {
     public final long duration;
     public final String path;
     public final int track;
+    public final long dateAdded;
 
     public Song(long id, String title, String artist, String album,
                 long albumId, long duration, String path, int track) {
+        this(id, title, artist, album, albumId, duration, path, track, 0L);
+    }
+
+    public Song(long id, String title, String artist, String album,
+                long albumId, long duration, String path, int track, long dateAdded) {
         this.id = id;
         this.title = title == null || title.isEmpty() ? "Tanpa judul" : title;
         this.artist = artist == null || artist.isEmpty() || "<unknown>".equals(artist)
@@ -43,6 +49,7 @@ public class Song implements Serializable {
         this.duration = duration;
         this.path = path == null ? "" : path;
         this.track = track;
+        this.dateAdded = dateAdded;
     }
 
     public Uri uri() {

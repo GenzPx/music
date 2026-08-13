@@ -52,6 +52,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.genzpx.music.BuildConfig;
 import com.genzpx.music.MusicApp;
 import com.genzpx.music.R;
+import com.genzpx.music.data.Library;
 import com.genzpx.music.data.MediaLibrary;
 import com.genzpx.music.data.Prefs;
 import com.genzpx.music.model.Song;
@@ -84,7 +85,10 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton backBtn;
 
     private int currentTab = 0;
+    private LibraryAdapter libAdapter;
     private MediaLibrary.Group openedGroup = null;
+    private String openedPlaylist = null;
+    private int libraryMode = 0; // 0 ringkasan, 1 favorit, 2 baru diputar
     private boolean searching = false;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -126,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         backBtn = findViewById(R.id.btn_back);
 
         list.setLayoutManager(new LinearLayoutManager(this));
-        songAdapter = new SongAdapter(this::playFrom);
+        songAdapter = new SongAdapter(this::playFrom, this::onSongLongPress);
         groupAdapter = new GroupAdapter(this::openGroup, R.drawable.ic_album_placeholder);
         list.setAdapter(songAdapter);
 
@@ -135,8 +139,10 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.nav_songs) currentTab = 0;
             else if (id == R.id.nav_albums) currentTab = 1;
             else if (id == R.id.nav_artists) currentTab = 2;
-            else currentTab = 3;
+            else if (id == R.id.nav_folders) currentTab = 3;
+            else currentTab = 4;
             openedGroup = null;
+            openedPlaylist = null;
             Prefs.get().setLastTab(currentTab);
             showTab();
             return true;
@@ -144,7 +150,12 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.btn_search).setOnClickListener(v -> toggleSearch());
         findViewById(R.id.btn_menu).setOnClickListener(v -> showMenu());
-        backBtn.setOnClickListener(v -> { openedGroup = null; searching = false; showTab(); });
+        backBtn.setOnClickListener(v -> {
+            if (openedPlaylist != null) openedPlaylist = null;
+            else if (currentTab == 4 && libraryMode != 0) libraryMode = 0;
+            else { openedGroup = null; searching = false; }
+            showTab();
+        });
 
         miniPlayer.setOnClickListener(v -> openNowPlaying());
         miniPlayPause.setOnClickListener(v -> { if (bound) service.togglePlayPause(); });
@@ -199,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
             case 1: return R.id.nav_albums;
             case 2: return R.id.nav_artists;
             case 3: return R.id.nav_folders;
+            case 4: return R.id.nav_library;
             default: return R.id.nav_songs;
         }
     }
@@ -297,6 +309,23 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        if (openedPlaylist != null) {
+            toolbarTitle.setText(openedPlaylist);
+            backBtn.setVisibility(View.VISIBLE);
+            List<Song> items = Library.get().playlistSongs(openedPlaylist);
+            songAdapter.submit(items);
+            list.setAdapter(songAdapter);
+            updateEmpty(items.isEmpty(), getString(R.string.playlist_empty));
+            refreshMini();
+            return;
+        }
+
+        if (currentTab == 4) {
+            showLibraryTab();
+            refreshMini();
+            return;
+        }
+
         backBtn.setVisibility(View.GONE);
         switch (currentTab) {
             case 1: {
@@ -325,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
             }
             default: {
                 toolbarTitle.setText(R.string.tab_songs);
-                List<Song> s = MediaLibrary.get().getSongs();
+                List<Song> s = MediaLibrary.get().sorted();
                 songAdapter.submit(s);
                 list.setAdapter(songAdapter);
                 updateEmpty(s.isEmpty(), getString(R.string.empty_songs));
@@ -335,10 +364,106 @@ public class MainActivity extends AppCompatActivity {
         refreshMini();
     }
 
+    /** Tab Pustaka: favorit, baru diputar, dan daftar putar buatan sendiri. */
+    private void showLibraryTab() {
+        if (libraryMode == 1) {
+            toolbarTitle.setText(R.string.favorites);
+            backBtn.setVisibility(View.VISIBLE);
+            List<Song> f = Library.get().favorites();
+            songAdapter.submit(f);
+            list.setAdapter(songAdapter);
+            updateEmpty(f.isEmpty(), getString(R.string.no_favorites));
+            return;
+        }
+        if (libraryMode == 2) {
+            toolbarTitle.setText(R.string.recently_played);
+            backBtn.setVisibility(View.VISIBLE);
+            List<Song> r = Library.get().recentlyPlayed();
+            songAdapter.submit(r);
+            list.setAdapter(songAdapter);
+            updateEmpty(r.isEmpty(), getString(R.string.no_recent));
+            return;
+        }
+
+        toolbarTitle.setText(R.string.tab_library);
+        backBtn.setVisibility(View.GONE);
+        list.setAdapter(libraryAdapter());
+        updateEmpty(false, "");
+    }
+
+    private LibraryAdapter libraryAdapter() {
+        if (libAdapter == null) {
+            libAdapter = new LibraryAdapter(new LibraryAdapter.Listener() {
+                @Override public void onFavorites() { libraryMode = 1; showTab(); }
+                @Override public void onRecent() { libraryMode = 2; showTab(); }
+                @Override public void onPlaylist(String name) { openedPlaylist = name; showTab(); }
+                @Override public void onNewPlaylist() {
+                    SongActions.promptNewPlaylist(MainActivity.this, name -> showTab());
+                }
+                @Override public void onPlaylistLongPress(String name) {
+                    showPlaylistMenu(name);
+                }
+            });
+        }
+        libAdapter.refresh();
+        return libAdapter;
+    }
+
+    private void showPlaylistMenu(String name) {
+        String[] items = {getString(R.string.rename), getString(R.string.delete)};
+        new AlertDialog.Builder(this)
+                .setTitle(name)
+                .setItems(items, (d, which) -> {
+                    if (which == 0) promptRename(name);
+                    else confirmDelete(name);
+                })
+                .show();
+    }
+
+    private void promptRename(String oldName) {
+        final android.widget.EditText input = new android.widget.EditText(this);
+        input.setText(oldName);
+        input.setSingleLine(true);
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        android.widget.FrameLayout box = new android.widget.FrameLayout(this);
+        box.setPadding(pad, pad / 2, pad, 0);
+        box.addView(input);
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.rename)
+                .setView(box)
+                .setPositiveButton(R.string.save, (d, w) -> {
+                    if (!Library.get().renamePlaylist(oldName,
+                            input.getText().toString())) {
+                        Toast.makeText(this, R.string.name_taken, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    showTab();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void confirmDelete(String name) {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.delete)
+                .setMessage(getString(R.string.delete_playlist_confirm, name))
+                .setPositiveButton(R.string.delete, (d, w) -> {
+                    Library.get().deletePlaylist(name);
+                    showTab();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
     private void updateEmpty(boolean empty, String msg) {
         emptyText.setText(msg);
         emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
         list.setVisibility(empty ? View.GONE : View.VISIBLE);
+    }
+
+    private void onSongLongPress(Song s) {
+        SongActions.showMenu(this, s, this::showTab);
     }
 
     private void openGroup(MediaLibrary.Group g) {
@@ -404,9 +529,11 @@ public class MainActivity extends AppCompatActivity {
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
+    /** Pemutar mini tetap ada; menekannya membuka layar penuh. */
     private void openNowPlaying() {
-        if (!bound || service.currentSong() == null) return;
-        new NowPlayingSheet(this, service).show();
+        if (!bound || service == null || service.currentSong() == null) return;
+        startActivity(new Intent(this, NowPlayingActivity.class));
+        overridePendingTransition(R.anim.slide_up, 0);
     }
 
     // ---------- Menu ----------
@@ -415,6 +542,7 @@ public class MainActivity extends AppCompatActivity {
         BottomSheetDialog d = new BottomSheetDialog(this);
         View v = getLayoutInflater().inflate(R.layout.sheet_menu, null);
 
+        v.findViewById(R.id.menu_sort).setOnClickListener(x -> { d.dismiss(); showSortDialog(); });
         v.findViewById(R.id.menu_sleep).setOnClickListener(x -> { d.dismiss(); showSleepTimer(); });
         v.findViewById(R.id.menu_eq).setOnClickListener(x -> { d.dismiss(); openEqualizer(); });
         v.findViewById(R.id.menu_theme).setOnClickListener(x -> { d.dismiss(); showThemeDialog(); });
@@ -431,6 +559,34 @@ public class MainActivity extends AppCompatActivity {
 
         d.setContentView(v);
         d.show();
+    }
+
+    private void showSortDialog() {
+        String[] items = {
+                getString(R.string.sort_title_az), getString(R.string.sort_artist),
+                getString(R.string.sort_album), getString(R.string.sort_date),
+                getString(R.string.sort_duration)
+        };
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.sort_by)
+                .setSingleChoiceItems(items, Prefs.get().getSort(), (d, which) -> {
+                    Prefs.get().setSort(which);
+                    d.dismiss();
+                    showSortDirection();
+                })
+                .show();
+    }
+
+    private void showSortDirection() {
+        String[] dir = {getString(R.string.ascending), getString(R.string.descending)};
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.sort_order)
+                .setSingleChoiceItems(dir, Prefs.get().isSortDescending() ? 1 : 0, (d, which) -> {
+                    Prefs.get().setSortDescending(which == 1);
+                    d.dismiss();
+                    showTab();
+                })
+                .show();
     }
 
     private void showSleepTimer() {
@@ -522,6 +678,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        if (openedPlaylist != null) { openedPlaylist = null; showTab(); return; }
+        if (currentTab == 4 && libraryMode != 0) { libraryMode = 0; showTab(); return; }
         if (openedGroup != null || searching) {
             openedGroup = null;
             searching = false;

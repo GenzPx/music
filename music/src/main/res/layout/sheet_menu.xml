@@ -14,6 +14,10 @@
         android:layout_marginBottom="10dp"
         android:background="@color/divider"/>
 
+    <TextView android:id="@+id/menu_sort" style="@style/MenuRow"
+        android:text="@string/sort_by"
+        android:drawableStart="@drawable/ic_sort"/>
+
     <TextView android:id="@+id/menu_sleep" style="@style/MenuRow"
         android:text="@string/sleep_timer"
         android:drawableStart="@drawable/ic_timer"/>

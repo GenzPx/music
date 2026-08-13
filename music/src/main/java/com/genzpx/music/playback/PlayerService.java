@@ -48,6 +48,7 @@ import androidx.media.app.NotificationCompat.MediaStyle;
 import androidx.media.session.MediaButtonReceiver;
 
 import com.genzpx.music.R;
+import com.genzpx.music.data.Library;
 import com.genzpx.music.data.Prefs;
 import com.genzpx.music.model.Song;
 import com.genzpx.music.ui.MainActivity;
@@ -218,6 +219,8 @@ public class PlayerService extends Service
         if (!requestFocus()) return;
         player.start();
         Prefs.get().setPlaybackFlag(true);
+        Song cur = queue.current();
+        if (cur != null) Library.get().addRecent(cur.id);
         if (!wakeLock.isHeld()) wakeLock.acquire(10 * 60 * 1000L);
         updateMetadata();
         updateState();

@@ -57,11 +57,13 @@ public class MediaLibrary {
                 MediaStore.Audio.Media.ALBUM_ID,
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.DATA,
-                MediaStore.Audio.Media.TRACK
+                MediaStore.Audio.Media.TRACK,
+                MediaStore.Audio.Media.DATE_ADDED
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND "
                 + MediaStore.Audio.Media.DURATION + " > 15000";
         String sort = MediaStore.Audio.Media.TITLE + " COLLATE NOCASE ASC";
+        // Urutan akhir ditentukan di sorted(), kueri hanya perlu hasil yang stabil
 
         Cursor c = null;
         try {
@@ -76,10 +78,11 @@ public class MediaLibrary {
                 int iDur = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION);
                 int iData = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
                 int iTrack = c.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK);
+                int iDate = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED);
                 while (c.moveToNext()) {
                     result.add(new Song(c.getLong(iId), c.getString(iTitle), c.getString(iArtist),
                             c.getString(iAlbum), c.getLong(iAlbumId), c.getLong(iDur),
-                            c.getString(iData), c.getInt(iTrack)));
+                            c.getString(iData), c.getInt(iTrack), c.getLong(iDate)));
                 }
             }
         } catch (Exception ignored) {
@@ -100,6 +103,36 @@ public class MediaLibrary {
             this.key = key; this.title = title; this.subtitle = subtitle; this.items = items;
         }
         public long albumIdForArt() { return items.isEmpty() ? -1 : items.get(0).albumId; }
+    }
+
+    /** Daftar lagu terurut sesuai pilihan pengguna. */
+    public List<Song> sorted() {
+        List<Song> l = getSongs();
+        final int mode = Prefs.get().getSort();
+        Collections.sort(l, new Comparator<Song>() {
+            @Override public int compare(Song a, Song b) {
+                switch (mode) {
+                    case Prefs.SORT_ARTIST: {
+                        int c = a.artist.compareToIgnoreCase(b.artist);
+                        return c != 0 ? c : a.title.compareToIgnoreCase(b.title);
+                    }
+                    case Prefs.SORT_ALBUM: {
+                        int c = a.album.compareToIgnoreCase(b.album);
+                        if (c != 0) return c;
+                        if (a.track != b.track) return Integer.compare(a.track, b.track);
+                        return a.title.compareToIgnoreCase(b.title);
+                    }
+                    case Prefs.SORT_DATE:
+                        return Long.compare(b.dateAdded, a.dateAdded);
+                    case Prefs.SORT_DURATION:
+                        return Long.compare(b.duration, a.duration);
+                    default:
+                        return a.title.compareToIgnoreCase(b.title);
+                }
+            }
+        });
+        if (Prefs.get().isSortDescending()) Collections.reverse(l);
+        return l;
     }
 
     public List<Group> albums() {

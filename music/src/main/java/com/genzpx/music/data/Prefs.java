@@ -26,6 +26,12 @@ public class Prefs {
     public static final int THEME_LIGHT = 1;
     public static final int THEME_DARK = 2;
 
+    public static final int SORT_TITLE = 0;
+    public static final int SORT_ARTIST = 1;
+    public static final int SORT_ALBUM = 2;
+    public static final int SORT_DATE = 3;
+    public static final int SORT_DURATION = 4;
+
     public static final int REPEAT_OFF = 0;
     public static final int REPEAT_ALL = 1;
     public static final int REPEAT_ONE = 2;
@@ -54,6 +60,12 @@ public class Prefs {
     }
     public long getLastSongId() { return sp.getLong("last_song", -1); }
     public int getLastPosition() { return sp.getInt("last_pos", 0); }
+
+    public int getSort() { return sp.getInt("sort", SORT_TITLE); }
+    public void setSort(int v) { sp.edit().putInt("sort", v).apply(); }
+
+    public boolean isSortDescending() { return sp.getBoolean("sort_desc", false); }
+    public void setSortDescending(boolean v) { sp.edit().putBoolean("sort_desc", v).apply(); }
 
     public int getLastTab() { return sp.getInt("last_tab", 0); }
     public void setLastTab(int v) { sp.edit().putInt("last_tab", v).apply(); }

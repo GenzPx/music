@@ -42,6 +42,18 @@ internet, build langsung digagalkan sebelum dirilis.
 
 ---
 
+
+### Baru di Music 1.1
+
+- **Layar Now Playing penuh** — pemutar mini di bawah tetap ada; menekannya kini membuka layar penuh (sampul besar, backdrop gradasi dari warna album, geser posisi, antrean).
+- **Perbaikan crash** saat pemutar mini ditekan.
+- **Urutkan lagu** — judul, artis, album, tanggal ditambahkan, atau durasi; naik atau turun.
+- **Favorit** — tahan lagu atau ketuk hati di layar Now Playing.
+- **Daftar putar** — buat, ganti nama, hapus; semuanya tersimpan lokal.
+- **Baru diputar** — riwayat 100 lagu terakhir.
+- **Jadikan nada dering** langsung dari tahan-lagu.
+- **Timer tidur** dan pintasan **equalizer** sistem.
+
 ## Video
 
 | | |

@@ -57,6 +57,13 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.NowPlayingActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:parentActivityName=".ui.MainActivity"
+            android:theme="@style/AppTheme" />
+
         <service
             android:name=".playback.PlayerService"
             android:enabled="true"

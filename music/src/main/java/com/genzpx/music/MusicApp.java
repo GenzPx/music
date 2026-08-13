@@ -19,6 +19,7 @@ package com.genzpx.music;
 
 import android.app.Application;
 import androidx.appcompat.app.AppCompatDelegate;
+import com.genzpx.music.data.Library;
 import com.genzpx.music.data.Prefs;
 
 public class MusicApp extends Application {
@@ -26,6 +27,7 @@ public class MusicApp extends Application {
     public void onCreate() {
         super.onCreate();
         Prefs.init(this);
+        Library.init(this);
 
         // Proses baru dimulai padahal penanda pemutaran masih menyala berarti
         // proses sebelumnya dibunuh paksa saat sedang memutar.

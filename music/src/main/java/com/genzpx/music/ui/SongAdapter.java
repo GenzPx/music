@@ -39,12 +39,19 @@ import java.util.List;
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.VH> {
 
     public interface OnSongClick { void onSong(List<Song> list, int position); }
+    public interface OnSongLongClick { void onLongPress(Song song); }
 
     private List<Song> data = new ArrayList<>();
     private final OnSongClick listener;
+    private OnSongLongClick longListener;
     private long highlightId = -1;
 
     public SongAdapter(OnSongClick l) { this.listener = l; }
+
+    public SongAdapter(OnSongClick l, OnSongLongClick ll) {
+        this.listener = l;
+        this.longListener = ll;
+    }
 
     public void submit(List<Song> list) {
         data = list == null ? new ArrayList<>() : list;
@@ -76,13 +83,23 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.VH> {
         h.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onSong(data, h.getAdapterPosition());
         });
+        h.itemView.setOnLongClickListener(v -> {
+            if (longListener == null) return false;
+            longListener.onLongPress(s);
+            return true;
+        });
+
+        // Tanda hati kecil pada lagu favorit
+        h.favMark.setVisibility(
+                com.genzpx.music.data.Library.get().isFavorite(s.id)
+                        ? View.VISIBLE : View.GONE);
     }
 
     @Override public int getItemCount() { return data.size(); }
 
     static class VH extends RecyclerView.ViewHolder {
         final TextView title, subtitle;
-        final ImageView art, playing;
+        final ImageView art, playing, favMark;
         private ArtTask task;
 
         VH(View v) {
@@ -91,6 +108,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.VH> {
             subtitle = v.findViewById(R.id.subtitle);
             art = v.findViewById(R.id.art);
             playing = v.findViewById(R.id.playing_indicator);
+            favMark = v.findViewById(R.id.fav_mark);
         }
 
         void bindArt(Song s) {
